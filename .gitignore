@@ -20,3 +20,6 @@ Thumbs.db
 
 # Project specific
 data/
+cmake-build-debug/
+.idea/
+*.bin

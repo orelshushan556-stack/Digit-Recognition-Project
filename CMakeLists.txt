@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 4.2)
-project(Digit_Recognition_Project)
+cmake_minimum_required(VERSION 3.20)
+project(DigitRecognitionProject)
 
-set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Digit_Recognition_Project main.cpp)
+# אומר לקומפיילר איפה לחפש את קובצי ה-.h
+include_directories(include)
+
+# מפנה את מערכת הבנייה להיכנס לתיקיית src
+add_subdirectory(src)
