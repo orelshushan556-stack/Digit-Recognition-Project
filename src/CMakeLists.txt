@@ -21,7 +21,9 @@ add_executable(DigitRecognitionEngine main.cpp Matrix.cpp
         CrossEntropy.cpp
         ../include/IEvaluator.h
         ClassifierEvaluator.cpp
-        ../include/ClassifierEvaluator.h)
+        ../include/ClassifierEvaluator.h
+        ../include/DigitRecognizer.h
+        DigitRecognizer.cpp)
 
 
 target_include_directories(DigitRecognitionEngine PUBLIC ${CMAKE_SOURCE_DIR}/include)
