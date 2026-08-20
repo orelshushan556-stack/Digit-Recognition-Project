@@ -5,10 +5,11 @@
 class CrossEntropy : public ILoss {
 public:
     CrossEntropy() = default;
+    ~CrossEntropy() override = default;
 
-    // Computes Categorical Cross Entropy Loss with numerical stability clipping
-    [[nodiscard]] double compute_loss(const Matrix& predictions, const Matrix& targets) const override;
+    // Calculates the Categorical Cross Entropy Loss
+    double loss_cost(const Matrix& predicted, const Matrix& target) override;
 
-    // Returns combined gradient for Softmax + CrossEntropy: (Y_pred - Y_true)
-    [[nodiscard]] Matrix compute_gradient(const Matrix& predictions, const Matrix& targets) const override;
+    // Calculates the gradient (predicted - target)
+    Matrix loss_gradient(const Matrix& predicted, const Matrix& target) override;
 };

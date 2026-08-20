@@ -4,73 +4,90 @@
 #include "NeuralNetwork.h"
 #include "MnistLoader.h"
 #include "ReLU.h"
-#include "Sigmoid.h"
-#include "MSE.h"
+#include "Softmax.h"
+#include "CrossEntropy.h"
 #include "Trainer.h"
+#include "ClassifierEvaluator.h"
+
+// Helper function to pack individual image matrices into continuous batch matrices
+void pack_data(const MnistData& data, Matrix& X, Matrix& Y) {
+    size_t samples = data.images.size();
+    for (size_t i = 0; i < samples; ++i) {
+        for (int j = 0; j < 784; ++j) {
+            X(i, j) = data.images[i](0, j);
+        }
+        for (int j = 0; j < 10; ++j) {
+            Y(i, j) = data.labels[i](0, j);
+        }
+    }
+}
 
 int main() {
-    std::cout << "--- Starting MNIST Training Pipeline ---\n\n";
+    std::cout << "--- Starting MNIST Training with Softmax & Cross-Entropy ---\n\n";
 
-    // 1. Load MNIST Training Dataset
+    // 1. Load Training Dataset (60,000 samples)
     MnistData train_data;
-    std::cout << "Loading MNIST dataset from binary files...\n";
-
-    // Correct filenames with hyphens matching C:/data/
+    std::cout << "Loading training data...\n";
     if (!MnistLoader::load_dataset("C:/data/train-images-idx3-ubyte",
                                    "C:/data/train-labels-idx1-ubyte",
                                    train_data)) {
-        std::cerr << "Error: Failed to load MNIST dataset! Check file paths.\n";
+        std::cerr << "Error: Failed to load training dataset!\n";
         return 1;
     }
 
-    size_t total_samples = train_data.images.size();
-    std::cout << "Successfully loaded " << total_samples << " training samples.\n\n";
-
-    // 2. Convert Data: Pack std::vector<Matrix> into a single continuous Matrix
-    // The Trainer expects a single Matrix for X (total_samples x 784) and Y (total_samples x 10)
-    std::cout << "Packing data for batch training...\n";
-    Matrix X_train(total_samples, 784);
-    Matrix Y_train(total_samples, 10);
-
-    for (size_t i = 0; i < total_samples; ++i) {
-        for (int j = 0; j < 784; ++j) {
-            // Unpack 1x784 image matrix into the large training batch matrix
-            X_train(i, j) = train_data.images[i](0, j);
-        }
-        for (int j = 0; j < 10; ++j) {
-            // Unpack 1x10 one-hot label matrix into the large training label matrix
-            Y_train(i, j) = train_data.labels[i](0, j);
-        }
+    // 2. Load Test Dataset (10,000 samples)
+    MnistData test_data;
+    std::cout << "Loading test data...\n";
+    if (!MnistLoader::load_dataset("C:/data/t10k-images-idx3-ubyte",
+                                   "C:/data/t10k-labels-idx1-ubyte",
+                                   test_data)) {
+        std::cerr << "Error: Failed to load test dataset!\n";
+        return 1;
     }
 
-    // 3. Build Architecture: Input(784) -> Hidden(128) -> Output(10)
-    std::cout << "Initializing Neural Network Architecture (784 -> 128 -> 10)...\n";
+    // 3. Convert vectors into continuous batch matrices
+    std::cout << "Packing datasets into matrices...\n";
+    Matrix X_train(train_data.images.size(), 784);
+    Matrix Y_train(train_data.labels.size(), 10);
+    pack_data(train_data, X_train, Y_train);
+
+    Matrix X_test(test_data.images.size(), 784);
+    Matrix Y_test(test_data.labels.size(), 10);
+    pack_data(test_data, X_test, Y_test);
+
+    // 4. Build Architecture: Input(784) -> Hidden(128, ReLU) -> Output(10, Softmax)
+    std::cout << "\nBuilding Neural Network Architecture (784 -> 128 -> 10)...\n";
     NeuralNetwork nn;
+    nn.add_layer(Layer(784, 128, std::make_shared<ReLU>()));
+    nn.add_layer(Layer(128, 10, std::make_shared<Softmax>()));
 
-    auto relu = std::make_shared<ReLU>();
-    auto sigmoid = std::make_shared<Sigmoid>();
+    // 5. Initialize Components with CrossEntropy
+    CrossEntropy ce_loss;
+    Trainer trainer(nn, ce_loss);
+    ClassifierEvaluator evaluator;
 
-    nn.add_layer(Layer(784, 128, relu));   // Hidden Layer
-    nn.add_layer(Layer(128, 10, sigmoid)); // Output Layer
+    // 6. Evaluate Baseline Accuracy (Before Training)
+    double initial_acc = evaluator.evaluate(nn, X_test, Y_test);
+    std::cout << "Initial Test Accuracy (Untrained): " << initial_acc << "%\n\n";
 
-    // 4. Initialize Loss Function and Trainer
-    MSE mse_loss;
-    Trainer trainer(nn, mse_loss);
-
-    // 5. Training Hyperparameters
+    // 7. Hyperparameters & Training Loop
     int epochs = 5;
     int batch_size = 32;
-    double learning_rate = 0.01;
+    double learning_rate = 0.05;
 
-    std::cout << "\nStarting Training Loop (" << epochs << " Epochs, Batch Size: "
+    std::cout << "Starting Training Loop (" << epochs << " Epochs, Batch Size: "
               << batch_size << ", Learning Rate: " << learning_rate << ")...\n";
-
-    // 6. Execute Batch Training
     trainer.train(X_train, Y_train, epochs, batch_size, learning_rate);
 
-    // 7. Save Model Weights to Binary File
+    // 8. Final Evaluation on Test Dataset
+    double final_acc = evaluator.evaluate(nn, X_test, Y_test);
+    std::cout << "\n========================================\n";
+    std::cout << "Final Test Accuracy (Softmax + CrossEntropy): " << final_acc << "%\n";
+    std::cout << "========================================\n\n";
+
+    // 9. Save Trained Model
     std::string model_filename = "mnist_model.bin";
-    std::cout << "\nSaving trained model weights to '" << model_filename << "'...\n";
+    std::cout << "Saving model weights to '" << model_filename << "'...\n";
     if (nn.save_weights(model_filename)) {
         std::cout << "SUCCESS: Model saved successfully!\n";
     } else {

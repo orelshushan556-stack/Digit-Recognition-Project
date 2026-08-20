@@ -2,6 +2,7 @@
 #include "Layer.h"
 #include <vector>
 #include <fstream>
+#include <string>
 class NeuralNetwork {
 private:
     std::vector<Layer> layers;

@@ -1,25 +1,17 @@
-﻿# CMake & Build outputs
+﻿# Build Artifacts
+build/
 cmake-build-*/
-CMakeCache.txt
-CMakeFiles/
-Makefile
+bin/
+*.exe
 *.o
 *.obj
-*.exe
-*.dll
-*.lib
-*.out
-compile_commands.json
 
-# CLion / JetBrains IDEs
-.idea/
-
-# OS specific files
-.DS_Store
-Thumbs.db
-
-# Project specific
-data/
-cmake-build-debug/
-.idea/
+# Model Weights & Data
 *.bin
+C:/data/
+data/
+
+# IDE files
+.idea/
+.vscode/
+*.user

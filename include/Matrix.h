@@ -55,5 +55,7 @@ public:
 
     // Loads matrix dimensions and binary data buffer from an open file stream
     void load(std::ifstream& file);
+    double& operator()(int index);
+    double operator()(int index) const;
 
 };

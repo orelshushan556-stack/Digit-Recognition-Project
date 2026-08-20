@@ -265,3 +265,10 @@ void Matrix::load(std::ifstream& file) {
     // 3. Read binary buffer into newly allocated memory
     file.read(reinterpret_cast<char*>(data), (rows * cols) * sizeof(double));
 }
+double& Matrix::operator()(int index) {
+    return data[index];
+}
+
+double Matrix::operator()(int index) const {
+    return data[index];
+}

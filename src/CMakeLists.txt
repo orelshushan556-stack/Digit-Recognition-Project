@@ -17,7 +17,11 @@ add_executable(DigitRecognitionEngine main.cpp Matrix.cpp
         Sigmod.cpp
         ../include/Softmax.h
         Softmax.cpp
-        ../include/CrossEntropy.h)
+        ../include/CrossEntropy.h
+        CrossEntropy.cpp
+        ../include/IEvaluator.h
+        ClassifierEvaluator.cpp
+        ../include/ClassifierEvaluator.h)
 
 
 target_include_directories(DigitRecognitionEngine PUBLIC ${CMAKE_SOURCE_DIR}/include)
