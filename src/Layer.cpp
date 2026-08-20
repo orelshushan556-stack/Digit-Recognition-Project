@@ -1,5 +1,6 @@
 #include "Layer.h"
 #include <utility>
+#include <cmath>
 
 Layer::Layer(int input_size, int output_size, std::shared_ptr<IActivation> activation)
     // Fix 1: Dimensions set to (input_size x output_size) for Matrix multiplication (X * W)

@@ -29,5 +29,11 @@ Matrix Softmax::forward(const Matrix& input) const {
     return result;
 }
 Matrix Softmax::backward(const Matrix& input) const {
-    return input;
+    Matrix ones(input.getRows(), input.getCols());
+    for (int i = 0; i < ones.getRows(); ++i) {
+        for (int j = 0; j < ones.getCols(); ++j) {
+            ones(i, j) = 1.0; //
+        }
+    }
+    return ones;
 }
