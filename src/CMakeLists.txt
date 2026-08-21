@@ -1,29 +1,24 @@
-add_executable(DigitRecognitionEngine main.cpp Matrix.cpp
-        ../include/IActivation.h
-        ../include/ReLU.h
+# Define a variable containing all the core components (excluding main.cpp)
+set(CORE_SOURCES
+        Matrix.cpp
         ReLU.cpp
-        ../include/Layer.h
         Layer.cpp
-        ../include/NeuralNetwork.h
         NeuralNetwork.cpp
-        ../include/ILoss.h
-        ../include/MSE.h
         mse.cpp
-        ../include/Trainer.h
         Trainer.cpp
-        ../include/MnistLoader.h
         MnistLoader.cpp
-        ../include/Sigmoid.h
         Sigmod.cpp
-        ../include/Softmax.h
         Softmax.cpp
-        ../include/CrossEntropy.h
         CrossEntropy.cpp
-        ../include/IEvaluator.h
         ClassifierEvaluator.cpp
-        ../include/ClassifierEvaluator.h
-        ../include/DigitRecognizer.h
-        DigitRecognizer.cpp)
+        DigitRecognizer.cpp
+)
 
+# Create a static library named 'nn_core' from the core sources
+add_library(nn_core ${CORE_SOURCES})
 
-target_include_directories(DigitRecognitionEngine PUBLIC ${CMAKE_SOURCE_DIR}/include)
+# Define the main training engine executable (ONLY main.cpp, without wasm_api.cpp)
+add_executable(DigitRecognitionEngine main.cpp)
+
+# Link the main engine to the core library
+target_link_libraries(DigitRecognitionEngine nn_core)

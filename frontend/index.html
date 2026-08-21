@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <!-- הקישור הישיר שמוודא שה-CSS נקרא בוודאות על ידי הדפדפן -->
+  <link rel="stylesheet" href="/src/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C++ Neural Network Digit Recognition</title>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>C++ Neural Network Engine</h1>
+    <p>Handwritten Digit Recognition running natively via WebAssembly</p>
+  </header>
+
+  <div class="main-layout">
+    <!-- Left Column: Drawing Pad -->
+    <div class="card drawing-section">
+      <h2>Drawing Pad</h2>
+      <div class="canvas-container">
+        <canvas id="drawing-pad" width="280" height="280"></canvas>
+      </div>
+      <div class="controls">
+        <button id="clear-btn">Clear Canvas</button>
+        <button id="predict-btn">Predict Digit</button>
+      </div>
+    </div>
+
+    <!-- Right Column: Behind the Scenes & Telemetry -->
+    <div class="card telemetry-section">
+      <h2>Behind the Scenes</h2>
+
+      <div class="preview-box">
+        <span>Engine Input (28x28 Scaled):</span>
+        <canvas id="mini-canvas" width="56" height="56"></canvas>
+      </div>
+
+      <div class="tech-specs">
+        <div class="spec-item"><strong>Core:</strong> C++ Custom Matrix Engine</div>
+        <div class="spec-item"><strong>Architecture:</strong> Fully Connected (784 → 128 → 10)</div>
+        <div class="spec-item"><strong>Activation:</strong> ReLU & Softmax</div>
+        <div class="spec-item"><strong>Runtime:</strong> WebAssembly (Wasm)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Section -->
+  <div class="result-box">
+    <h3 id="result-text">Loading C++ Engine...</h3>
+    <div id="probabilities-grid" class="probabilities-grid"></div>
+  </div>
+</div>
+
+<!-- Vite TypeScript Entry Point -->
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

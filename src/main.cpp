@@ -71,9 +71,9 @@ int main() {
     std::cout << "Initial Test Accuracy (Untrained): " << initial_acc << "%\n\n";
 
     // 7. Hyperparameters & Training Loop
-    int epochs = 5;
-    int batch_size = 32;
-    double learning_rate = 0.05;
+    int epochs = 20;
+    int batch_size = 64;
+    double learning_rate = 0.01;
 
     std::cout << "Starting Training Loop (" << epochs << " Epochs, Batch Size: "
               << batch_size << ", Learning Rate: " << learning_rate << ")...\n";
