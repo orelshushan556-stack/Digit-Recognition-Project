@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <!-- הקישור הישיר שמוודא שה-CSS נקרא בוודאות על ידי הדפדפן -->
+  <!-- Ensure CSS is properly linked -->
   <link rel="stylesheet" href="/src/style.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>C++ Neural Network Digit Recognition</title>
@@ -22,15 +22,41 @@
       <div class="canvas-container">
         <canvas id="drawing-pad" width="280" height="280"></canvas>
       </div>
-      <div class="controls">
-        <button id="clear-btn">Clear Canvas</button>
-        <button id="predict-btn">Predict Digit</button>
+
+      <!-- Slider & Controls -->
+      <div class="controls-wrapper">
+        <div class="slider-container">
+          <label for="brush-size">Brush Thickness: <span id="brush-size-val">22</span>px</label>
+          <input type="range" id="brush-size" min="10" max="40" value="22" step="1">
+        </div>
+        <div class="controls">
+          <button id="clear-btn">Clear Canvas</button>
+          <button id="predict-btn">Predict Digit</button>
+        </div>
+      </div>
+
+      <!-- Model Information and Expectation Setting -->
+      <div class="disclaimer-note">
+        <h4>About the Model & Expectations</h4>
+        <p>This engine is powered by a custom Fully-Connected Neural Network written from scratch in native C++ and compiled to WebAssembly. It was trained on the <strong>MNIST dataset</strong> (60,000 standard handwritten digits).</p>
+        <p><strong>Please Note:</strong> Unlike a modern Convolutional Neural Network (CNN), a dense architecture lacks spatial invariance. While this drawing pad runs a pre-processing algorithm to automatically center and scale your input, unconventional drawing styles, extreme line thicknesses, or non-standard digit shapes may still result in lower accuracy.</p>
       </div>
     </div>
 
     <!-- Right Column: Behind the Scenes & Telemetry -->
     <div class="card telemetry-section">
       <h2>Behind the Scenes</h2>
+
+      <!-- Detailed "Built from Scratch" Badge -->
+      <div class="custom-built-badge detailed-badge">
+        <h4>🚀 100% Engineered From Scratch</h4>
+        <p>This project features a neural network engine built entirely without external machine learning libraries. The engineering complexity spans three core pillars:</p>
+        <ul class="badge-list">
+          <li><strong>Native C++ Implementation:</strong> Independent implementation of all required mathematics, including matrix multiplication, backpropagation algorithms, and activation functions (ReLU & Softmax).</li>
+          <li><strong>Hardware-Level Optimization:</strong> To maximize performance, matrix data is managed via a manually calculated 1D Flat Array rather than standard 2D arrays. This architectural choice optimizes CPU cache utilization and ensures efficient memory management.</li>
+          <li><strong>WebAssembly Runtime:</strong> The system-level C++ code is compiled to Wasm, allowing the heavy model inference to execute entirely client-side within the browser at near-native speeds.</li>
+        </ul>
+      </div>
 
       <div class="preview-box">
         <span>Engine Input (28x28 Scaled):</span>

@@ -35,12 +35,12 @@ async function init() {
         return;
     }
 
-    // 1. Initialize WebAssembly Module
+    // Initialize WebAssembly Module
     const Module = await window.createEngine({
         locateFile: (path: string) => `/${path}`
     });
 
-    // 2. Load model weights into Wasm virtual file system
+    // Load model weights into Wasm virtual file system
     try {
         const response = await fetch('/mnist_model.bin');
         const buffer = await response.arrayBuffer();
@@ -51,7 +51,7 @@ async function init() {
         return;
     }
 
-    // 3. Instantiate C++ Recognizer and load model weights
+    // Instantiate C++ Recognizer and load model weights
     const recognizer = new Module.DigitRecognizer();
     const loaded = recognizer.load_model("/mnist_model.bin");
 
@@ -62,7 +62,7 @@ async function init() {
 
     resultText.innerText = "Draw a digit clearly in the box below";
 
-    // 4. Setup HTML5 Canvas for drawing
+    // Setup HTML5 Canvas for drawing
     const canvas = document.getElementById('drawing-pad') as HTMLCanvasElement;
     const ctx = canvas.getContext('2d')!;
 
@@ -70,9 +70,22 @@ async function init() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 15; // Brush width
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+
+    // Setup Brush Size Slider
+    const brushSlider = document.getElementById('brush-size') as HTMLInputElement;
+    const brushSizeVal = document.getElementById('brush-size-val') as HTMLSpanElement;
+
+    // Initial brush size
+    ctx.lineWidth = parseInt(brushSlider.value, 10);
+
+    // Update brush size when slider changes
+    brushSlider.addEventListener('input', (e) => {
+        const val = (e.target as HTMLInputElement).value;
+        brushSizeVal.innerText = val;
+        ctx.lineWidth = parseInt(val, 10);
+    });
 
     let isDrawing = false;
 
@@ -129,26 +142,69 @@ async function init() {
 
     // Predict Digit Event
     document.getElementById('predict-btn')?.addEventListener('click', () => {
-        // Update Mini Canvas preview
-        const miniCanvas = document.getElementById('mini-canvas') as HTMLCanvasElement;
-        if (miniCanvas) {
-            const miniCtx = miniCanvas.getContext('2d')!;
-            miniCtx.imageSmoothingEnabled = false;
-            miniCtx.fillStyle = '#000000';
-            miniCtx.fillRect(0, 0, miniCanvas.width, miniCanvas.height);
-            miniCtx.drawImage(canvas, 0, 0, miniCanvas.width, miniCanvas.height);
+        // 1. Read all pixels to find Bounding Box
+        const imgDataRaw = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+        let hasPixels = false;
+
+        for (let y = 0; y < canvas.height; y++) {
+            for (let x = 0; x < canvas.width; x++) {
+                const alpha = imgDataRaw[(y * canvas.width + x) * 4];
+                if (alpha > 10) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                    hasPixels = true;
+                }
+            }
         }
 
+        if (!hasPixels) {
+            resultText.innerText = "Please draw a digit!";
+            probabilitiesGrid.innerHTML = '';
+            return;
+        }
+
+        const bboxWidth = Math.max(1, maxX - minX);
+        const bboxHeight = Math.max(1, maxY - minY);
+
+        // 2. Create the 28x28 working canvas
         const smallCanvasWork = document.createElement('canvas');
         smallCanvasWork.width = 28;
         smallCanvasWork.height = 28;
         const smallCtx = smallCanvasWork.getContext('2d')!;
+
+        smallCtx.fillStyle = '#000000';
+        smallCtx.fillRect(0, 0, 28, 28);
         smallCtx.imageSmoothingEnabled = true;
         smallCtx.imageSmoothingQuality = 'high';
-        smallCtx.drawImage(canvas, 0, 0, 28, 28);
 
+        // 3. Scale and center (Target 20x20 inside 28x28)
+        const targetSize = 20.0;
+        const scale = targetSize / Math.max(bboxWidth, bboxHeight);
+        const scaledWidth = bboxWidth * scale;
+        const scaledHeight = bboxHeight * scale;
+
+        const dx = (28 - scaledWidth) / 2;
+        const dy = (28 - scaledHeight) / 2;
+
+        smallCtx.drawImage(
+            canvas,
+            minX, minY, bboxWidth, bboxHeight,
+            dx, dy, scaledWidth, scaledHeight
+        );
+
+        // 4. Update Mini Canvas preview
+        const miniCanvas = document.getElementById('mini-canvas') as HTMLCanvasElement;
+        if (miniCanvas) {
+            const miniCtx = miniCanvas.getContext('2d')!;
+            miniCtx.imageSmoothingEnabled = false;
+            miniCtx.drawImage(smallCanvasWork, 0, 0, miniCanvas.width, miniCanvas.height);
+        }
+
+        // 5. Convert to Flat Array for C++
         const imgData = smallCtx.getImageData(0, 0, 28, 28).data;
-
         const pixels = new Module.VectorDouble();
         let sum = 0;
 
@@ -159,19 +215,19 @@ async function init() {
         }
 
         if (sum < 1.0) {
-            resultText.innerText = "Please draw a larger digit!";
+            resultText.innerText = "Please draw a clearer digit!";
             pixels.delete();
             probabilitiesGrid.innerHTML = '';
             return;
         }
 
-        // Call prediction method from C++ backend
+        // 6. Predict using Wasm
         const prediction = recognizer.predict(pixels);
         pixels.delete();
 
         resultText.innerText = `Predicted Digit: ${prediction}`;
 
-        // Render confidence breakdown grid
+        // Render breakdown
         probabilitiesGrid.innerHTML = '';
         for (let i = 0; i < 10; i++) {
             const item = document.createElement('div');
